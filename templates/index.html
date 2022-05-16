@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="/static/theme-chalk.css">
+</head>
+
+<body>
+  <div id="app">
+    <!-- 上传文件 -->
+    <el-upload drag="true" 
+      :show-file-list="false" 
+      :on-change="handleChange" 
+      :http-request="uploadFile">
+      <i class="el-icon-upload"></i>
+      <div class="el-upload__text">将文件拖到此处</div>
+    </el-upload>
+
+    <div v-loading="loading">
+      <!-- 未上传文件时占位符 -->
+      <div v-if="tableFlag == null">
+        <el-empty></el-empty>
+      </div>
+
+      <!-- 上传文件后的表格 -->
+      <div v-if="tableFlag == 'success'">
+        <!-- 表格绑定数据tableData -->
+        <el-table height="600"
+          :data="tableData">
+          <!-- 遍历数据每一列 -->
+          <el-table-column v-for="col in tableColumns"
+            :prop="col"
+            :label="col">
+          </el-table-column>
+        </el-table>
+      </div>
+    </div>
+
+</body>
+
+<script src="/static/vue.js"></script>
+<script src="/static/element-ui.js"></script>
+<script src="/static/axios.js"></script>
+
+<script>
+  new Vue({
+    el: '#app',
+
+    data: function () {
+      return {
+        tableColumns: [],
+        tableData: [],
+        tableFlag: null,
+        loading: false
+      }
+    },
+
+    methods: {
+      // 加载文件时播放动画
+      handleChange() {
+        this.loading = true
+      },
+
+      uploadFile(param) {
+        // post提交数据格式为formdata
+        let config = {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        }
+
+        // 使用axios提交post请求
+        axios
+          .post('/transfer', { file: param.file }, config)
+          .then(resp => {
+            // 如果上传成功，则更新表格数据
+            this.tableColumns = resp.data.tableColumns
+            this.tableData = resp.data.tableData
+          })
+
+        // 显示表格数据，隐藏加载动画
+        this.tableFlag = 'success'
+        this.loading = false
+      }
+    }
+
+  })
+</script>
+
+</html>
